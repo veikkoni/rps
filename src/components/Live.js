@@ -1,5 +1,6 @@
 import React from 'react'
 import { useEffect, useState } from 'react'
+import LiveGame from './LiveGame'
 
 function Live() {
   const [games, setGames] = useState([])
@@ -37,12 +38,7 @@ function Live() {
   <div className="live">
       {games.map(game => {
             return (
-                <>
-                    {game.gameId}
-                    {game.type}
-                    {game.playerA.name}
-                    {game.playerB.name}
-                </>
+                <LiveGame game={game} key={game.gameId} />
             )
         })}
   </div>
