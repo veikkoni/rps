@@ -3,6 +3,8 @@ import Hand from './Hand';
 
 function  Game({game, size}) {
    // size small or large
+
+   
    const px = size === 'small' ? '50px' : '100px';
 
     return (

@@ -1,0 +1,15 @@
+version: "3"
+services:
+
+  webapp:
+    image: rps-veikkoni/web-app
+    container_name: rps-veikkoni-web-app
+    build: .
+    ports:
+      - "3000:80"
+
+#  proxy:
+#    image: sourabh385/cors-anywhere
+#    container_name: rps-veikkoni-proxy
+#    ports:
+#      - "5005:5000"
