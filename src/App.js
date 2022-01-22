@@ -1,14 +1,10 @@
 import './App.css';
-import Live from './components/Live';
-import History from './components/History';
+import DataRetriever from './components/DataRetriever';
 
 function App() {
   return (
     <div className="app">
-      <div className="main-content">
-        <Live/>
-        <History/>        
-      </div>
+      <DataRetriever/>
     </div>
   );
 }

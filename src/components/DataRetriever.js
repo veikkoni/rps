@@ -1,0 +1,57 @@
+import React, { useEffect, useState, useReducer } from 'react';
+import Live from './Live';
+import History from './History';
+import reducer from './reducer';
+
+function DataRetriever() {
+
+  const [state, dispatch] = useReducer(reducer, { 'players': {}, 'liveGames': [], 'games': 0 });
+  const [cursor, setCursor] = useState("/rps/history")
+
+  useEffect(() => {
+    const ws = new WebSocket("wss://bad-api-assignment.reaktor.com/rps/live");
+
+    ws.onmessage = function (event) {
+      const parsed = JSON.parse(JSON.parse(event.data));
+
+      if (parsed.type === 'GAME_BEGIN') {
+        dispatch({ type: 'addLiveGame', payload: parsed })
+      } else {
+        dispatch({ type: 'endLiveGame', payload: parsed })
+        dispatch({ type: 'addGames', payload: [parsed] })
+      }
+    }
+
+    return () => {
+      ws.close();
+    }
+
+  }, []);
+
+
+  useEffect(() => {
+    if (cursor != null) {
+      fetch('https://cors-proxy.nakkivene.dy.fi/https://bad-api-assignment.reaktor.com' + cursor)
+        .then((res) => res.json())
+        .then((res) => {
+          dispatch({ type: 'addGames', payload: res.data })
+          setTimeout(() => {
+            setCursor(res.cursor);
+          }, 1000)
+        })
+        .catch(err => alert(err))
+    }
+  }, [cursor]);
+
+  return (
+    <div className="app">
+      <div className="main-content">
+        <Live liveGames={state.liveGames} />
+        <History games={state.games} players={state.players}/>        
+      </div>
+    </div>
+  );
+}
+
+
+export default DataRetriever;

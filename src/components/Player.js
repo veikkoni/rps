@@ -1,7 +1,6 @@
 import React, {useState} from 'react'
 import Hand from './Hand'
-import Modal from './Modal';
-import LiveGame from './LiveGame';
+import Game from './Game';
 
   function Player({player, name}) {
 
@@ -26,24 +25,25 @@ import LiveGame from './LiveGame';
             value = player.stats.Scissors
         }
 
-       return <Hand no_data={biggest == "None"} hand={biggest} size={30}  />
+       return <Hand no_data={biggest === "None"} hand={biggest} size={30}  />
     }
 
-    console.log("asd")
     return(
       <div className='player-history'>
           <div className='player-stats'>
-            <div>{name}</div>
-            <div>Games: {player.stats.games}</div>
-            <div>Win ratio: {winRatio}</div>
-            <div>Most played hand: <MostPlayedHand/></div>
-            <button onClick={() => setShowGames(!showGames)}>Show games</button>         
+            <div className='player-stat'>{name}</div>
+            <div className='player-stat'>Games: {player.stats.games}</div>
+            <div className='player-stat'>Win ratio: {winRatio}</div>
+            <div className='player-stat'>Most played hand: <MostPlayedHand/></div>
+          <div className='player-stat'> <button onClick={() => setShowGames(!showGames)}>Show games</button>  
+          </div>
+                   
           </div>
         <div className="history-games">
           {showGames && 
           player.games.map(game => {
             return (
-                <LiveGame game={game} key={game.gameId} size={2} />
+                <Game game={game} key={game.gameId} size="small" />
             )
         })}
         </div>
