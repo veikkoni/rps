@@ -3,8 +3,8 @@ function add_player_stats(player, newPlayers, j, winner) {
     if (!newPlayers.hasOwnProperty(j[player].name)) {
         newPlayers[j[player].name] = { 'games': [], 'stats': { 'wins': 0, 'games': 0, 'ROCK': 0, 'PAPER': 0, 'SCISSORS': 0 } }
     }
-    const seen = newPlayers[j[player].name].games.indexOf(j) === -1
-    if (seen) {
+
+    if (newPlayers[j[player].name].games.indexOf(j) === -1) {
         newPlayers[j[player].name].games.push(j)
         newPlayers[j[player].name].stats[j[player].played] += 1;
         newPlayers[j[player].name].stats.games += 1;
@@ -12,20 +12,18 @@ function add_player_stats(player, newPlayers, j, winner) {
             newPlayers[j[player].name].stats.wins += 1;
         }
     }
-    return seen
 
 }
 
 function determine_winner(a, b) {
 
-    if (a === b) { return 'tie'
-    } else if (a === 'SCISSORS' && b === 'ROCK') { return 'playerA'
-    } else if (a === 'SCISSORS' && b === 'PAPER') { return 'playerB'
-    } else if (a === 'ROCK' && b === 'SCISSORS') {return 'playerA'
-    } else if (a === 'ROCK' && b === 'PAPER') { return 'playerB'
-    } else if (a === 'PAPER' && b === 'SCISSORS') { return 'playerB'
-    } else if (a === 'PAPER' && b === 'ROCK') { return 'playerA'
-    }
+    if (a === b) { return 'tie' }
+    else if (a === 'SCISSORS' && b === 'ROCK') { return 'playerA' }
+    else if (a === 'SCISSORS' && b === 'PAPER') { return 'playerB' }
+    else if (a === 'ROCK' && b === 'SCISSORS') {return 'playerA' }
+    else if (a === 'ROCK' && b === 'PAPER') { return 'playerB' }
+    else if (a === 'PAPER' && b === 'SCISSORS') { return 'playerB' }
+    else if (a === 'PAPER' && b === 'ROCK') { return 'playerA' }
 
 }
 
@@ -53,19 +51,13 @@ function reducer(state, action) {
 
 
         case 'addGames':
-            var newGames = state.games;
+            var newGames = state.games + action.payload.length;
             var newPlayers = state.players;
 
             for (var i = 0; i < action.payload.length; i++) {
                 const winner = determine_winner(action.payload[i].playerA.played, action.payload[i].playerB.played)
-
-                if (!add_player_stats('playerA', newPlayers, action.payload[i], winner)) {
-                    newGames += 1;
-                }
-
-                if (!add_player_stats('playerB', newPlayers, action.payload[i], winner)) {
-                    newGames += 1;
-                }
+                add_player_stats('playerA', newPlayers, action.payload[i], winner)
+                add_player_stats('playerB', newPlayers, action.payload[i], winner)
             }
 
             newState = { ...state, 'games': newGames, 'players': newPlayers }
