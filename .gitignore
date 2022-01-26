@@ -21,3 +21,7 @@
 /client/npm-debug.log*
 /client/yarn-debug.log*
 /client/yarn-error.log*
+
+
+backend/node_modules/
+backend/rps-data.json

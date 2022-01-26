@@ -1,77 +1,106 @@
 const express = require("express");
 const app = express();
 
+
+const JsonDB = require('node-json-db').JsonDB;
+const Config = require('node-json-db/dist/lib/JsonDBConfig').Config;
+const fs = require('fs');
+
 const fetch = require("node-fetch")
-// {'games': [], 'stats': {}}
-var data = {'games': [], 'players': {}};
+var playerNames = {};
+var games = [];
 const cursor = "/rps/history"
 
-function determine_winner(a, b) {
-  if (a === b) { return 'tie' } 
-  else if ( a === 'SCISSORS' && b === 'ROCK') {return 'playerA'}
-  else if ( a === 'SCISSORS' && b === 'PAPER') {return 'playerB'}
-  else if ( a === 'ROCK' && b === 'SCISSORS') {return 'playerA'}
-  else if ( a === 'ROCK' && b === 'PAPER') {return 'playerB'}
-  else if ( a === 'PAPER' && b === 'SCISSORS') {return 'playerB'}
-  else if ( a === 'PAPER' && b === 'ROCK') {return 'playerA'}  
+try {
+  fs.unlinkSync('./rps-data.json');
+} catch(err) {
+  console.log("File already deleted");
 }
 
-function addGames(data, games) {
-  var seen = 0
-  for (var i = 0 ; i < games.length ; i++) {
-    if (data.games.indexOf(games[i].gameId) != -1) {
-      seen++;
-    } else {
-      data.games.push(games[i].gameId)
-      if (!data.players.hasOwnProperty(games[i].playerA.name)) {
-        data.players[games[i].playerA.name] = {'games': [games[i]], 'stats': {'wins': 0, 'games': 0, 'ROCK': 0, 'PAPER': 0, 'SCISSORS': 0}}
-      }
-      if (!data.players.hasOwnProperty(games[i].playerB.name)) {
-        data.players[games[i].playerB.name] = {'games': [], 'stats': {'wins': 0, 'games': 0, 'ROCK': 0, 'PAPER': 0, 'SCISSORS': 0}}
-      }
-      const winner = determine_winner(games[i].playerA.played, games[i].playerB.played)
-      data.players[games[i].playerA.name].games.push(games[i])
-      data.players[games[i].playerB.name].games.push(games[i])
-      data.players[games[i].playerA.name].stats[games[i].playerA.played] += 1;
-      data.players[games[i].playerB.name].stats[games[i].playerB.played] += 1;
-      data.players[games[i].playerA.name].stats.games += 1;
-      data.players[games[i].playerB.name].stats.games += 1;
+var db = new JsonDB(new Config("rps-data", false, true, '/'));
 
-      if (winner != 'tie') {
-          data.players[games[i][winner].name].stats.wins += 1;
-      }
 
+db.push("/games", 0)
+db.push("/players", {})
+
+
+
+function add_player_stats(player, j, winner) {
+
+  if (!playerNames.hasOwnProperty(j[player].name)) {
+    playerNames[j[player].name] = {'stats': {'wins': 0, 'games': 0, 'ROCK': 0, 'PAPER': 0, 'SCISSORS': 0}};
+    db.push("/players/" + j[player].name, {'games': []})
+  }
+
+  if (games.indexOf(j.gameId) == -1) {
       
+      var stats = playerNames[j[player].name].stats
+      stats.games += 1;
+      stats[j[player].played] += 1;
+      if (winner === player) {
+        stats.wins += 1;
+      }
 
-    }
-
-  
+      db.push("/players/" + j[player].name + "/games[]", j, true)
+      //db.push("/players/" + j[player].name + "/games/" + j.gameId, j, true)
+      return 0
   }
-  console.log("Run done")
-  console.log("seen", seen)
-  console.log("games", data.games.length  )
+  else {
+   return 1
+  };
 
-  var count = 0;
-  for(var key in data.players) {
-        if(data.players.hasOwnProperty(key)) {
-    count++;
-    }
-  }
-  console.log(count)
-
-  return seen
 }
+
+
+
+function determine_winner(a, b) {
+
+  if (a === b) { return 'tie' }
+  else if (a === 'SCISSORS' && b === 'ROCK') { return 'playerA' }
+  else if (a === 'SCISSORS' && b === 'PAPER') { return 'playerB' }
+  else if (a === 'ROCK' && b === 'SCISSORS') {return 'playerA' }
+  else if (a === 'ROCK' && b === 'PAPER') { return 'playerB' }
+  else if (a === 'PAPER' && b === 'SCISSORS') { return 'playerB' }
+  else if (a === 'PAPER' && b === 'ROCK') { return 'playerA' }
+
+}
+
+function add_games(batch) {
+
+  db.push("/games", batch.length + db.getData("/games"), true);
+
+  var seen = 0;
+  console.log(batch.length)
+  var startTimer = performance.now();
+  for (var i = 0; i < batch.length; i++) {
+
+      const winner = determine_winner(batch[i].playerA.played, batch[i].playerB.played)
+      seen += add_player_stats('playerA', batch[i], winner)
+      seen += add_player_stats('playerB',  batch[i], winner)
+      games.push(batch[i].gameId);
+
+  }
+  
+  db.save();
+  var endTimer = performance.now();
+  console.log((endTimer - startTimer)/batch.length)
+  return seen;
+
+}
+
+
+
+
 
 function retrieve_data(data, cursor){
   console.log(cursor)
   fetch('https://bad-api-assignment.reaktor.com' + cursor)
     .then((res) => res.json())
     .then((res) => {
-      if (addGames(data, res.data) === 0) {
+      if (add_games(res.data) === 0) {
         setTimeout(() => {
-
           retrieve_data(data, res.cursor)
-        }, 1)
+        }, 100)
       }
     })
     .catch(err => console.log(err))
@@ -81,15 +110,15 @@ function retrieve_data(data, cursor){
 
 
 
-app.get("/join", (req, res, next) => {
-  res.send(data.players)
-});
+//app.get("/join", (req, res, next) => {
+//  res.send(games.length)
+//});
 
 
 
 
-app.listen(5000, () => {
-  console.log("Server running");
-});
+//app.listen(5000, () => {
+//  console.log("Server running");
+//});
 
 retrieve_data(data, cursor);
