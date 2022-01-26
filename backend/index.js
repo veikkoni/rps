@@ -6,6 +6,8 @@ const JsonDB = require('node-json-db').JsonDB;
 const Config = require('node-json-db/dist/lib/JsonDBConfig').Config;
 const fs = require('fs');
 
+var WebSocket = require('ws');
+
 const fetch = require("node-fetch")
 var playerNames = {};
 var games = [];
@@ -20,7 +22,7 @@ try {
 var db = new JsonDB(new Config("rps-data", false, true, '/'));
 
 
-db.push("/games", 0)
+db.push("/games", [])
 db.push("/players", {})
 
 
@@ -33,7 +35,6 @@ function add_player_stats(player, j, winner) {
   }
 
   if (games.indexOf(j.gameId) == -1) {
-      
       var stats = playerNames[j[player].name].stats
       stats.games += 1;
       stats[j[player].played] += 1;
@@ -46,6 +47,7 @@ function add_player_stats(player, j, winner) {
       return 0
   }
   else {
+    console.log("already seen")
    return 1
   };
 
@@ -67,7 +69,7 @@ function determine_winner(a, b) {
 
 function add_games(batch) {
 
-  db.push("/games", batch.length + db.getData("/games"), true);
+
 
   var seen = 0;
   console.log(batch.length)
@@ -78,9 +80,10 @@ function add_games(batch) {
       seen += add_player_stats('playerA', batch[i], winner)
       seen += add_player_stats('playerB',  batch[i], winner)
       games.push(batch[i].gameId);
+      db.push("/games[]", batch[i].gameId, true)
 
   }
-  
+
   db.save();
   var endTimer = performance.now();
   console.log((endTimer - startTimer)/batch.length)
@@ -89,36 +92,58 @@ function add_games(batch) {
 }
 
 
+function retrieve_data(cursor){
+  if (cursor != null) {
 
+    fetch('https://bad-api-assignment.reaktor.com' + cursor)
+      .then((res) => res.json())
+      .then((res) => {
+        if (add_games(res.data) === 0) {
+          setTimeout(() => {
+            retrieve_data(res.cursor)
+          }, 2000)
+        }
+      })
+      .catch(err => console.log(err))
+  }
+}
 
+function retrieve_websocket() {
+  const ws = new WebSocket('wss://bad-api-assignment.reaktor.com/rps/live');
 
-function retrieve_data(data, cursor){
-  console.log(cursor)
-  fetch('https://bad-api-assignment.reaktor.com' + cursor)
-    .then((res) => res.json())
-    .then((res) => {
-      if (add_games(res.data) === 0) {
-        setTimeout(() => {
-          retrieve_data(data, res.cursor)
-        }, 100)
-      }
-    })
-    .catch(err => console.log(err))
+  ws.onmessage = (event) => {
+    const parsed = JSON.parse(JSON.parse(event.data));
+
+    if (parsed.type === 'GAME_RESULT') {
+      add_games([parsed])
+      
+    }
+  }
 
 }
 
 
 
+app.get("/players", (req, res, next) => {
+  res.json(playerNames)
+});
 
-//app.get("/join", (req, res, next) => {
-//  res.send(games.length)
-//});
+app.get("/player/games/:player/:page", (req, res, next) => {
+  const player = req.params.player;
+  const page = req.params.page;
+  const games = db.getData("/players/" + player + "/games");
+  const start = (page - 1) * 100;
+  const games_to_send = games.slice(start, start + 100);
+  res.json(games_to_send)
+});
 
 
 
 
-//app.listen(5000, () => {
-//  console.log("Server running");
-//});
 
-retrieve_data(data, cursor);
+app.listen(5000, () => {
+  console.log("Server running");
+});
+
+retrieve_data(cursor);
+retrieve_websocket();
