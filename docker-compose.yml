@@ -15,6 +15,18 @@ services:
     ports:
       - "5000:5000"
 
+  database:
+    image: postgres:14.1
+    build: ./database/
+    container_name: rps-veikkoni-database
+    environment:
+      POSTGRES_PASSWORD: example
+    ports:
+      - "5432:5432"
+
+
+
+
 #  proxy:
 #    image: sourabh385/cors-anywhere
 #    container_name: rps-veikkoni-proxy

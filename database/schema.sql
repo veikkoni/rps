@@ -1,0 +1,17 @@
+
+CREATE TABLE "player" (
+  "name" TEXT PRIMARY KEY,
+  "wins" INTEGER DEFAULT 0,
+  "games" INTEGER DEFAULT 0,
+  "ROCK" INTEGER DEFAULT 0,
+  "PAPER" INTEGER DEFAULT 0,
+  "SCISSORS" INTEGER DEFAULT 0
+);
+
+CREATE TABLE "game" (
+  "id" TEXT PRIMARY KEY,
+  "data" TEXT,
+  "playera" TEXT,
+  "playerb" TEXT
+);
+
