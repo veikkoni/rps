@@ -4,14 +4,14 @@ function add_player_stats(player, newPlayers, j, winner) {
         newPlayers[j[player].name] = { 'games': [], 'stats': { 'wins': 0, 'games': 0, 'ROCK': 0, 'PAPER': 0, 'SCISSORS': 0 } }
     }
 
-    if (newPlayers[j[player].name].games.indexOf(j) === -1) {
-        newPlayers[j[player].name].games.push(j)
+    //if (newPlayers[j[player].name].games.indexOf(j) === -1) {
+        //newPlayers[j[player].name].games.push(j)
         newPlayers[j[player].name].stats[j[player].played] += 1;
         newPlayers[j[player].name].stats.games += 1;
         if (winner === player) {
             newPlayers[j[player].name].stats.wins += 1;
         }
-    }
+  //  }
 
 }
 
@@ -63,6 +63,10 @@ function reducer(state, action) {
             newState = { ...state, 'games': newGames, 'players': newPlayers }
             break;
 
+        case 'addPlayers':
+            var newPlayers = { ...action.payload.players }
+            newState = { ...state, 'players': newPlayers, 'games': action.payload.games }
+            break;
 
         default:
             throw new Error();

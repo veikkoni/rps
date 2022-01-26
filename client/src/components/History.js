@@ -1,6 +1,6 @@
 import Player from './Player';
 
-function History({games, players}) {
+function History({games, players, updatePlayers}) {
 
   if (games === 0) {
     return (
@@ -16,6 +16,7 @@ function History({games, players}) {
         <div className="history-stats">
           <p className="stats-games">Total games retrieved: {games}</p>
           <p className="stats-players">Total players retrieved: {Object.keys(players).length}</p>
+          <button onClick={updatePlayers}>Manual refresh</button>
           </div>
           {Object.keys(players).sort().map((key, i) => <Player player={players[key]} name={key} key={key} />)}
       </div>

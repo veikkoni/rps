@@ -5,6 +5,7 @@ const app = express();
 const JsonDB = require('node-json-db').JsonDB;
 const Config = require('node-json-db/dist/lib/JsonDBConfig').Config;
 const fs = require('fs');
+const cors = require('cors');
 
 var WebSocket = require('ws');
 
@@ -12,6 +13,9 @@ const fetch = require("node-fetch")
 var playerNames = {};
 var games = [];
 const cursor = "/rps/history"
+
+var memorizedPlayer = {};
+var memorizedPlayerName = "";
 
 try {
   fs.unlinkSync('./rps-data.json');
@@ -25,7 +29,7 @@ var db = new JsonDB(new Config("rps-data", false, true, '/'));
 db.push("/games", [])
 db.push("/players", {})
 
-
+app.use(cors());
 
 function add_player_stats(player, j, winner) {
 
@@ -125,15 +129,20 @@ function retrieve_websocket() {
 
 
 app.get("/players", (req, res, next) => {
-  res.json(playerNames)
+  res.json({'players': playerNames, 'games': games.length})
 });
 
 app.get("/player/games/:player/:page", (req, res, next) => {
   const player = req.params.player;
   const page = req.params.page;
-  const games = db.getData("/players/" + player + "/games");
-  const start = (page - 1) * 100;
-  const games_to_send = games.slice(start, start + 100);
+  
+  if (player !== memorizedPlayerName){
+    memorizedPlayerName = player;
+    memorizedPlayer = db.getData("/players/" + player + "/games")
+  }
+
+  const start = (page - 1) * 10;
+  const games_to_send = memorizedPlayer.slice(start, start + 10);
   res.json(games_to_send)
 });
 

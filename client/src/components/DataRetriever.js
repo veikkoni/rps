@@ -13,7 +13,21 @@ function DataRetriever() {
   const [cursor, setCursor] = useState("/rps/history")
 
 
+  function retrieve_player_data () {
+    fetch('http://localhost:5000/players')
+      .then((res) => res.json())
+      .then((res) => {
+        if (state.games !== res.games) {
+          dispatch({ type: 'addPlayers', payload: res })
+        }
+      }
+    )
+  }
+  
+
   useEffect(() => {
+    retrieve_player_data();
+
     const ws = new WebSocket(websocketAddress);
 
     ws.onmessage = function (event) {
@@ -34,7 +48,7 @@ function DataRetriever() {
   }, []);
 
 
-
+/*
   useEffect(() => {
     if (cursor != null) {
       fetch( proxyAddress + httpApiAddress + cursor)
@@ -48,13 +62,14 @@ function DataRetriever() {
         .catch(err => alert(err))
     }
   }, [cursor]);
+*/
 
   
   return (
     <div className="app">
       <div className="main-content">
         <Live liveGames={state.liveGames} />
-        <History games={state.games} players={state.players}/>        
+        <History games={state.games} players={state.players} updatePlayers={retrieve_player_data}/>        
       </div>
     </div>
   );
