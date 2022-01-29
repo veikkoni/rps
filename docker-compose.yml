@@ -23,12 +23,3 @@ services:
     container_name: rps-veikkoni-database
     environment:
       POSTGRES_PASSWORD: example
-
-
-
-
-#  proxy:
-#    image: sourabh385/cors-anywhere
-#    container_name: rps-veikkoni-proxy
-#    ports:
-#      - "5005:5000"

@@ -14,7 +14,7 @@ function initialize() {
         games = res.rows.map(r => r.id)
   
         for (var i = 0; i < res2.rows.length; i++) {
-          playerNames[res2.rows[i].name] = {
+          playerStats[res2.rows[i].name] = {
             "stats": {
               "wins": res2.rows[i].wins,
               "games": res2.rows[i].games,
@@ -43,9 +43,9 @@ function initialize() {
   function update_player_database() {
     // Saves userstats to database for persistent storage
     // Called every minute
-    for (var key in playerNames) {
+    for (var key in playerStats) {
       db.query('UPDATE player SET wins = $1, games = $2, "ROCK" = $3, "PAPER" = $4, "SCISSORS" = $5 WHERE name = $6',
-        [playerNames[key].stats.wins, playerNames[key].stats.games, playerNames[key].stats.ROCK, playerNames[key].stats.PAPER, playerNames[key].stats.SCISSORS, key], (res) => {}
+        [playerStats[key].stats.wins, playerStats[key].stats.games, playerStats[key].stats.ROCK, playerStats[key].stats.PAPER, playerStats[key].stats.SCISSORS, key], (res) => {}
       )
     }
   }
@@ -55,12 +55,12 @@ function initialize() {
   function add_player_stats(player, j, winner) {
     // Add player if not seen before AND add stats to players
   
-    if (!playerNames.hasOwnProperty(j[player].name)) {
-      playerNames[j[player].name] = {'stats': {'wins': 0, 'games': 0, 'ROCK': 0, 'PAPER': 0, 'SCISSORS': 0}};
+    if (!playerStats.hasOwnProperty(j[player].name)) {
+      playerStats[j[player].name] = {'stats': {'wins': 0, 'games': 0, 'ROCK': 0, 'PAPER': 0, 'SCISSORS': 0}};
       db.query("INSERT INTO player (name) VALUES ($1) ON CONFLICT DO NOTHING", [j[player].name], () => {})
     }
   
-    var stats = playerNames[j[player].name].stats
+    var stats = playerStats[j[player].name].stats
     stats.games += 1;
     stats[j[player].played] += 1;
     if (winner === player) {

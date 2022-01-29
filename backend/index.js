@@ -7,7 +7,9 @@ app.use(cors());
 
 const db = require('./db.js');
 
-global.playerNames = {};
+// PlayerStats = {'name': {'stats': {'wins': 0, 'games': 0, 'ROCK': 0, 'PAPER': 0, 'SCISSORS': 0}}}
+global.playerStats = {};
+// Games is an array of gameids
 global.games = [];
 
 
@@ -16,7 +18,7 @@ const initialize = require('./data_retriever.js');
 
 app.get("/v1/players", (req, res, next) => {
   console.log("GET /players")
-  res.json({'players': playerNames, 'games': games.length})
+  res.json({'players': playerStats, 'games': games.length})
 });
 
 
