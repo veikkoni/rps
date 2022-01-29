@@ -6,15 +6,15 @@ import reducer from './reducer';
 function DataRetriever() {
 
   const websocketAddress = "wss://bad-api-assignment.reaktor.com/rps/live";
-  const proxyAddress = "https://cors-proxy.nakkivene.dy.fi/";
-  const httpApiAddress = "https://bad-api-assignment.reaktor.com";
+  const apiAddress = "http://api.nakkivene.dy.fi/players/";
+
 
   const [state, dispatch] = useReducer(reducer, { 'players': {}, 'liveGames': [], 'games': 0 });
   const [cursor, setCursor] = useState("/rps/history")
 
 
   function retrieve_player_data () {
-    fetch('http://localhost:5000/players')
+    fetch(apiAddress)
       .then((res) => res.json())
       .then((res) => {
         if (state.games !== res.games) {
