@@ -21,9 +21,6 @@ function DataRetriever() {
         }
       }
     )
-    setTimeout(() => {
-      retrieve_player_data()
-    }, 10 * 1000)
   }
   
 
@@ -39,7 +36,7 @@ function DataRetriever() {
         dispatch({ type: 'addLiveGame', payload: parsed })
       } else {
         dispatch({ type: 'endLiveGame', payload: parsed })
-        dispatch({ type: 'addGames', payload: [parsed] })
+        retrieve_player_data()
       }
     }
 

@@ -23,9 +23,9 @@ app.get("/v1/players", (req, res, next) => {
 
 app.get("/v1/player/games/:player/:page", (req, res, next) => {
   console.log("GET /player/games/" + req.params.player + "/" + req.params.page)
-  const player = req.params.player;
-  const page = req.params.page;
   const pageSize = 30;
+  const player = req.params.player;
+  const page = (req.params.page-1) * pageSize;
 
   db.query("SELECT data FROM game WHERE playera = $1 OR playerb = $1 ORDER BY id LIMIT $2 OFFSET $3", [player, pageSize, page], (qres) => {
     if (qres.rowCount >= 0 ) {
