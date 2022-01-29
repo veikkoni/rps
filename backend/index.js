@@ -50,11 +50,56 @@ const d2b = require('./db.js');
 app.use(cors());
 
 
-function update_player_database() {
-  db.push("/games", games, true)
-  db.push("/players", playerNames, true)  
-  db.save();
+function initialize() {
+  d2b.query("SELECT id FROM game", [], (res) => {
+    d2b.query('SELECT name, wins, games, "ROCK", "PAPER", "SCISSORS" FROM player', [], (res2) => {
+      games = res.rows.map(r => r.id)
 
+      for (var i = 0; i < res2.rows.length; i++) {
+        playerNames[res2.rows[i].name] = {
+          "stats": {
+            "wins": res2.rows[i].wins,
+            "games": res2.rows[i].games,
+            "ROCK": res2.rows[i].ROCK,
+            "PAPER": res2.rows[i].PAPER,
+            "SCISSORS": res2.rows[i].SCISSORS
+          }
+        }
+      }
+      console.log(games.length)
+      console.log(res2.rows.length)
+      retrieve_data(cursor, true);
+      retrieve_websocket();
+      every_minute();
+    })
+  })
+}
+
+
+function every_minute() {
+  update_player_database();
+  setTimeout(every_minute, 60 * 1000);
+}
+
+
+function update_player_database() {
+ /// db.push("/games", games, true)
+ /// db.push("/players", playerNames, true)  
+ /// db.save();
+
+
+
+ for (var key in playerNames) {
+
+  d2b.query('UPDATE player SET wins = $1, games = $2, "ROCK" = $3, "PAPER" = $4, "SCISSORS" = $5 WHERE name = $6',
+   [playerNames[key].stats.wins, playerNames[key].stats.games, playerNames[key].stats.ROCK, playerNames[key].stats.PAPER, playerNames[key].stats.SCISSORS, key], (res) => {
+     
+   })
+
+
+
+ }
+console.log("Players added")
 
 }
 
@@ -136,6 +181,7 @@ function add_games(batch) {
 
 
 
+
   var seen = 0;
   var startTimer = performance.now();
 
@@ -152,29 +198,42 @@ function add_games(batch) {
     } else {
       
       seen++;
+      
     }
 
     // db.push("/games[]", batch[i].gameId, true)
 
   }
+
   var endTimer = performance.now();
   console.log(new Date(), batch.length, (endTimer - startTimer)/batch.length)
-  return seen;
+  console.log(seen)
+  console.log(batch.length - seen)
+  
+  return batch.length - seen;
 
   
 }
 
 
-function retrieve_data(cursor){
+function retrieve_data(cursor, force){
+  console.log(cursor)
   if (cursor != null) {
 
     fetch('https://bad-api-assignment.reaktor.com' + cursor)
       .then((res) => res.json())
       .then((res) => {
-        add_games(res.data) 
+        if (add_games(res.data) > 0 || force) {
           setTimeout(() => {
-            retrieve_data(res.cursor)
+            retrieve_data(res.cursor, force)
           }, 2000)
+        } else {
+          setTimeout(() => {
+            retrieve_data(cursor, false)
+          }, 5 * 60 * 1000)
+        }
+          
+
       })
       .catch(err => console.log(err))
   }
@@ -201,6 +260,8 @@ app.get("/players", (req, res, next) => {
 });
 
 app.get("/player/games/:player/:page", (req, res, next) => {
+  var startTimer = performance.now();
+
   const player = req.params.player;
   const page = req.params.page;
 
@@ -211,9 +272,13 @@ app.get("/player/games/:player/:page", (req, res, next) => {
 
   //const games_to_send = memorizedPlayer.slice(start, start + 10);
 
-  d2b.query("SELECT data FROM game WHERE playera = $1 OR playerb = $1 LIMIT $2 OFFSET $3", [player, 10, page], (qres) => {
+  d2b.query("SELECT data FROM game WHERE playera = $1 OR playerb = $1 ORDER BY id LIMIT $2 OFFSET $3", [player, 10, page], (qres) => {
     if (qres.rowCount >= 0 ) {
-      res.json(qres.rows)
+      //console.log(qres.rows)
+      //res.send(JSON.parse(qres.rows))
+      res.send(qres.rows.map(r => JSON.parse(r.data)))
+      var endTimer = performance.now();
+      console.log(new Date(), (endTimer - startTimer))
     }
     else {
       res.json([])
@@ -223,6 +288,10 @@ app.get("/player/games/:player/:page", (req, res, next) => {
 
 });
 
+app.get("/debug", (req, res, next) => {
+  console.log(games)
+  res.json({'a': 'a'})
+});
 
 
 
@@ -230,6 +299,5 @@ app.get("/player/games/:player/:page", (req, res, next) => {
 app.listen(5000, () => {
   console.log("Server running");
 });
+initialize()
 
-retrieve_data(cursor);
-retrieve_websocket();

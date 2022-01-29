@@ -42,9 +42,11 @@ import Game from './Game';
 
 
     useEffect(() => {
-      fetch('http://localhost:5000/player/games/' + name + '/' + page)
-      .then(res => res.json())
-      .then(res => setGames(res))
+      if (showGames){ 
+        fetch('http://localhost:5000/player/games/' + name + '/' + page)
+        .then(res => res.json())
+        .then(res => setGames(res))
+      }
     }, [page])
 
 
