@@ -52,8 +52,8 @@ import Game from './Game';
         <div className="page-selector">
           <button onClick={() => setPage(Math.max(1, page - 1))}>Prev</button>
           <p>Current page: {page}</p>
-          <p>{(page-1)*games.length}-{(page)*games.length} / {player.stats.games}</p>
-          <button onClick={() => setPage(page + 1)}>Next</button>
+          <p>{(page-1)*30}-{(page)*30} / {player.stats.games}</p>
+          <button onClick={() => page*30 > player.stats.games ? setPage(page) : setPage(page + 1)}>Next</button>
         </div>
       )
     }
