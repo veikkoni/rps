@@ -4,8 +4,10 @@ import Game from './Game';
 
   function Player({player, name}) {
 
+    const apiAddress = "http://localhost:5000/v1/player/games/";
+
     const [showGames, setShowGames] = useState(false);
-    const [page, setPage] = useState(1);
+    const [page, setPage] = useState(0);
     const [games, setGames] = useState([]);
 
     const winRatio = Math.round((player.stats.wins / player.stats.games)*100) + "%"
@@ -31,19 +33,14 @@ import Game from './Game';
     }
 
     function getGames() {
-      if (!showGames){ 
-        fetch('http://localhost:5000/player/games/' + name + '/' + page)
-        .then(res => res.json())
-        .then(res => setGames(res))
-      }
-
+      setPage(1)
       setShowGames(!showGames);
     }
 
 
     useEffect(() => {
       if (showGames){ 
-        fetch('http://localhost:5000/player/games/' + name + '/' + page)
+        fetch(apiAddress + name + '/' + page)
         .then(res => res.json())
         .then(res => setGames(res))
       }
@@ -52,7 +49,7 @@ import Game from './Game';
 
     function Page({page}) {
       return(
-        <div className="page">
+        <div className="page-selector">
           <button onClick={() => setPage(Math.max(1, page - 1))}>Prev</button>
           <p>Current page: {page}</p>
           <p>{(page-1)*games.length}-{(page)*games.length} / {player.stats.games}</p>
@@ -68,13 +65,13 @@ import Game from './Game';
             <div className='player-stat'>Games: {player.stats.games}</div>
             <div className='player-stat'>Win ratio: {winRatio}</div>
             <div className='player-stat'>Most played hand: <MostPlayedHand/></div>
-          <div className='player-stat'> <button onClick={getGames}>Show games</button>  
+          <div className='player-stat'> 
+            <button onClick={getGames}>Show games</button>  
           </div>
                    
           </div>
-        <div className="history-games">
-
         {showGames && <Page page={page}/>}
+        <div className="history-games">
         {showGames && games.map(game => {
             return (
                 <Game game={game} key={game.gameId} size="small" />

@@ -6,11 +6,10 @@ import reducer from './reducer';
 function DataRetriever() {
 
   const websocketAddress = "wss://bad-api-assignment.reaktor.com/rps/live";
-  const apiAddress = "http://api.nakkivene.dy.fi/players/";
+  const apiAddress = "http://localhost:5000/v1/players/";
 
 
   const [state, dispatch] = useReducer(reducer, { 'players': {}, 'liveGames': [], 'games': 0 });
-  const [cursor, setCursor] = useState("/rps/history")
 
 
   function retrieve_player_data () {
@@ -22,6 +21,9 @@ function DataRetriever() {
         }
       }
     )
+    setTimeout(() => {
+      retrieve_player_data()
+    }, 10 * 1000)
   }
   
 
@@ -46,23 +48,6 @@ function DataRetriever() {
     }
 
   }, []);
-
-
-/*
-  useEffect(() => {
-    if (cursor != null) {
-      fetch( proxyAddress + httpApiAddress + cursor)
-        .then((res) => res.json())
-        .then((res) => {
-          dispatch({ type: 'addGames', payload: res.data })
-          setTimeout(() => {
-            setCursor(res.cursor);
-          }, 1000)
-        })
-        .catch(err => alert(err))
-    }
-  }, [cursor]);
-*/
 
   
   return (

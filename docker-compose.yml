@@ -10,6 +10,8 @@ services:
   
   backend:
     image: rps-veikkoni/backend:1.0
+    depends_on:
+      - database
     container_name: rps-veikkoni-backend
     build: ./backend/
     ports:
@@ -21,8 +23,6 @@ services:
     container_name: rps-veikkoni-database
     environment:
       POSTGRES_PASSWORD: example
-    ports:
-      - "5432:5432"
 
 
 
